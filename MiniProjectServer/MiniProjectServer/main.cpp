@@ -63,21 +63,40 @@ void main()
 				string welcomeMsg = "Welcome maddafkkas!\r\n"; //Perhaps change this
 				send(client, welcomeMsg.c_str(), welcomeMsg.size() + 1, 0);
 				
-			}//else statement starts here:
-	
+			}
+			else
+			{
+				//buffer for recived data
+				char buff[4096];
+				ZeroMemory(buff, 4096);
+				//accepting external messages 
+				int byteIN = recv(sock, buff, 54096, 0);
+				if(byteIN <= 0)
+				{
+					closesocket(sock);
+					FD_CLR(sock, &master);
+				}
+				
+				//echo message to all other clients NOT THE socket that send it
+				for (int i = 0; i < master.fd_count; i++)
+				{
+					SOCKET outputSock = master.fd_array[i];
+					if (outputSock != listening && outputSock != sock)
+					{
+						ostringstream stringStream;
+						stringStream << "Testbadder " << sock << ": " << buff << "\r\n"; //text standing in front of each message from every other klient than yourself
+						string stringOutput = stringStream.str(); 
+						
+						send(outputSock, stringOutput.c_str(), stringOutput.size()+1, 0); //sending the message out to the remaining clients, +1 is because in c++ there is a trailing 0 so the size will be +1
+					}
+				}
+			}
+		}
+	}
+ 
 
-
-	//waiting for connection 
-
-	//Close listening socket
-
-	//accept and echo message back
-
-	//close the socket
-
-
-
-	//shutdown for Ws2(winsock)
+	//cleanup for winsock
+	WSACleanup();
 
 
 }
